@@ -4,6 +4,13 @@ h1{
     color: #FFFFFF;
 }
 
+body{
+    background-color: #000000;
+    background-image: url("images/Splash.png");
+    background-position: center; 
+    background-repeat: no-repeat;
+}
+
 #signature{
     color: #FFFFFF;
     bottom:0;

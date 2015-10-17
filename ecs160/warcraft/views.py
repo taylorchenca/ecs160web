@@ -1,6 +1,9 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, loader, Context
 from django.shortcuts import render, render_to_response, redirect
+from django.contrib import auth
+from django.core.context_processors import csrf
+
 # Create your views here.
 
 def index(request):
@@ -30,3 +33,32 @@ def prototype(request):
                 return render(request, 'warcraft/prototype_form.html', {'error':error, 'message':message})
     else:
         return render(request, 'warcraft/prototype_form.html', {'error':error, 'message':message})
+
+
+def login(request):
+    c={}
+    c.update(csrf(request))
+    return render_to_response('warcraft/login.html', c)
+
+def auth_view(request):
+    username = request.POST.get('username','')
+    password = request.POST.get('password', '')
+    user = auth.authenticate(username=username, password=password)
+    if user is not None:
+        auth.login(request, user)
+        return HttpResponseRedirect('/accounts/loggedin')
+    else:
+        return HttpResponseRedirect('/accounts/invalid')
+        
+def logout(request):
+    auth.logout(request)
+    return render_to_response('warcraft/logout.html')
+
+def loggedin(request):
+    return render_to_response('warcraft/loggedin.html', {'full_name': request.user.username})
+
+def invalid_login(request):
+    return render_to_response('warcraft/invalid_login.html')
+    
+    
+    

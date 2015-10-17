@@ -22,4 +22,9 @@ urlpatterns = [
     url(r'^/$', include('warcraft.urls', namespace="warcraft")),
     url(r'', include('warcraft.urls', namespace="warcraft")),
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^accounts/login/$', 'warcraft.views.login'),
+    url(r'^accounts/auth/$', 'warcraft.views.auth_view'),
+    url(r'^accounts/logout/$', 'warcraft.views.logout'),
+    url(r'^accounts/loggedin/$', 'warcraft.views.loggedin'),
+    url(r'^accounts/invalid/$', 'warcraft.views.invalid_login'),
 ]
