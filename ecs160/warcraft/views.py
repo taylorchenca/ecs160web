@@ -4,6 +4,8 @@ from django.shortcuts import render, render_to_response, redirect
 from django.contrib import auth
 from django.core.context_processors import csrf
 from django.contrib.auth.forms import UserCreationForm
+from forms import MyRegistrationForm
+
 import re
 
 # Create your views here.
@@ -66,11 +68,13 @@ def invalid_login(request):
 def register_user(request):
     args = {}
     args.update(csrf(request))
-    args['form'] = UserCreationForm()
+    args['form'] = MyRegistrationForm()
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = MyRegistrationForm(request.POST,  request.FILES)
         if form.is_valid():
             form.save()
+            avatar = request.FILES['avatar']
+            avatar.save()
             return HttpResponseRedirect('/accounts/register_success')
         else:
             args['form'] = form

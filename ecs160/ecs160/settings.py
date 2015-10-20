@@ -102,3 +102,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join('/home/apmishra100/ecs160/', 'static')
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join('/home/apmishra100/ecs160/', 'media')
