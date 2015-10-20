@@ -3,6 +3,8 @@ from django.template import RequestContext, loader, Context
 from django.shortcuts import render, render_to_response, redirect
 from django.contrib import auth
 from django.core.context_processors import csrf
+from django.contrib.auth.forms import UserCreationForm
+import re
 
 # Create your views here.
 
@@ -61,4 +63,22 @@ def invalid_login(request):
     return render_to_response('warcraft/invalid_login.html')
     
     
-    
+def register_user(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect('/accounts/register_success')
+    args = {}
+    args.update(csrf(request))
+    args['form'] = UserCreationForm()
+    return render_to_response('warcraft/register.html', args)
+
+def register_success (reqest):
+    return render_to_response('warcraft/register_success.html')
+
+def internalLogin (request):
+    if request.method == 'GET':
+        username = request.GET.get('\'HTTP_username\'', '')
+        password = request.GET.get('\'HTTP_password\'', '')
+        return render_to_response('warcraft/internalLogin.html', {'username': username, 'password':password})
