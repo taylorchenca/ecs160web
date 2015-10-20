@@ -3,9 +3,28 @@
 {% block content %}
 
     <h2>Register</h2>
+    
     <form action="/accounts/register/" method="post">{% csrf_token %}
-    {{form}}
-    <input type = "submit" value="Register" />
+        {{ form.non_field_errors }}
+        <div class="fieldWrapper">
+            {{ form.username.errors }}
+                <label for="id_username">Username:</label>
+            {{ form.username }}
+        </div>
+        <br />
+        <div class="fieldWrapper">
+            {{ form.password1.errors }}
+            <label for="id_password1">Password:</label>
+            {{ form.password1 }}
+        </div>
+        <br />
+        <div class="fieldWrapper">
+            {{ form.password2.errors }}
+            <label for="id_password2">Confirm Password:</label>
+            {{ form.password2 }}
+        </div>
+        <br />
+        <input type = "submit" value="Register" />
     </form>
 
 {% endblock %}

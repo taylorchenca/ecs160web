@@ -64,14 +64,16 @@ def invalid_login(request):
     
     
 def register_user(request):
+    args = {}
+    args.update(csrf(request))
+    args['form'] = UserCreationForm()
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             return HttpResponseRedirect('/accounts/register_success')
-    args = {}
-    args.update(csrf(request))
-    args['form'] = UserCreationForm()
+        else:
+            args['form'] = form
     return render_to_response('warcraft/register.html', args)
 
 def register_success (reqest):
@@ -79,6 +81,12 @@ def register_success (reqest):
 
 def internalLogin (request):
     if request.method == 'GET':
-        username = request.GET.get('\'HTTP_username\'', '')
-        password = request.GET.get('\'HTTP_password\'', '')
-        return render_to_response('warcraft/internalLogin.html', {'username': username, 'password':password})
+        username = request.META['HTTP_USERNAME']
+        password = request.META['HTTP_PASSWORD']
+        user = auth.authenticate(username=username, password=password)
+        if user is not None:
+            auth.login(request, user)
+            return HttpResponseRedirect('/accounts/loggedin')
+        else:
+            return HttpResponseRedirect('/accounts/invalid')
+        return render(request, 'warcraft/internalLogin.html', {'username': dummy, 'password': passdummy})
