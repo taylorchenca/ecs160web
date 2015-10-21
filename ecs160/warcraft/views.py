@@ -4,10 +4,12 @@ from django.shortcuts import render, render_to_response, redirect
 from django.contrib import auth
 from django.core.context_processors import csrf
 from django.contrib.auth.forms import UserCreationForm
-from forms import MyRegistrationForm
+from .forms import UserForm, UserProfileForm
+from .models import UserProfile
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 import re
-
+media = '/home/apmishra100/ecs160/media'
 # Create your views here.
 
 def index(request):
@@ -59,26 +61,34 @@ def logout(request):
     return render_to_response('warcraft/logout.html')
 
 def loggedin(request):
-    return render_to_response('warcraft/loggedin.html', {'full_name': request.user.username})
+    profile = request.user.userprofile
+    picture = profile.picture
+    return render(request, 'warcraft/loggedin.html', {'full_name': request.user.username, 'avatar':picture})
 
 def invalid_login(request):
     return render_to_response('warcraft/invalid_login.html')
     
     
 def register_user(request):
-    args = {}
-    args.update(csrf(request))
-    args['form'] = MyRegistrationForm()
+    context = RequestContext(request)
     if request.method == 'POST':
-        form = MyRegistrationForm(request.POST,  request.FILES)
-        if form.is_valid():
-            form.save()
-            avatar = request.FILES['avatar']
-            avatar.save()
+        user_form = UserForm(data = request.POST)
+        profile_form = UserProfileForm(request.POST, request.FILES)
+        if user_form.is_valid() and profile_form.is_valid():
+            user = user_form.save()
+            user.set_password(user.password)
+            user.save()
+            profile = profile_form.save(commit=False)
+            profile.user = user
+            profile.picture = request.FILES['picture']
+            profile.save()
             return HttpResponseRedirect('/accounts/register_success')
         else:
-            args['form'] = form
-    return render_to_response('warcraft/register.html', args)
+            print user_form.errors, profile_form.errors
+    else:
+        user_form = UserForm()
+        profile_form = UserProfileForm()
+    return render_to_response('warcraft/register.html', {'user_form': user_form, 'profile_form': profile_form}, context)
 
 def register_success (reqest):
     return render_to_response('warcraft/register_success.html')

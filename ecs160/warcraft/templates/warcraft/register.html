@@ -4,45 +4,14 @@
 
     <h2>Register</h2>
     
-    <form enctype="multipart/form-data" action="/accounts/register/" method="post">{% csrf_token %}
-        {{ form.non_field_errors }}
-        <div class="fieldWrapper">
-            {{ form.username.errors }}
-                <label for="id_username">Username:</label>
-            {{ form.username }}
-        </div>
-        <br />
-        
-        <div class="fieldWrapper">
-            {{ form.email.errors }}
-            <label for="id_email">Email:</label>
-            {{ form.email }}
-        </div>
-        <br />
-        
-        <div class="fieldWrapper">
-            {{ form.avatar.errors }}
-            <label for="id_avatar">Avatar Image:</label>
-            {{ form.avatar }}
-        </div>
-        <br />
-        
-        <div class="fieldWrapper">
-            {{ form.password1.errors }}
-            <label for="id_password1">Password:</label>
-            {{ form.password1 }}
-        </div>
-        <br />
-        
-        <div class="fieldWrapper">
-            {{ form.password2.errors }}
-            <label for="id_password2">Confirm Password:</label>
-            {{ form.password2 }}
-        </div>
-        <br />
-
+    <form enctype="multipart/form-data" action="/accounts/register/" method="post">
+        {% csrf_token %}
+       
+        {{ user_form.as_p }}
+        {{ profile_form.as_p }}
         
         <input type = "submit" value="Register" />
+        
     </form>
 
 {% endblock %}
