@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'simple_email_confirmation',
     'warcraft',
 )
 
@@ -106,3 +107,12 @@ STATIC_ROOT = os.path.join('/home/apmishra100/ecs160/', 'static')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join('/home/apmishra100/ecs160/', 'media')
+
+AUTH_USER_MODEL = 'warcraft.User'
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'chriscraftecs160@gmail.com'
+EMAIL_HOST_PASSWORD = 'webserver'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER

@@ -3,12 +3,16 @@ from django.template import RequestContext, loader, Context
 from django.shortcuts import render, render_to_response, redirect
 from django.contrib import auth
 from django.core.context_processors import csrf
-from django.contrib.auth.forms import UserCreationForm
-from .forms import UserForm, UserProfileForm
-from .models import UserProfile
 from django.core.files.uploadedfile import SimpleUploadedFile
-
+from django.http import JsonResponse
 import re
+from simple_email_confirmation import *
+from django.contrib.auth import login as django_login, authenticate, logout as django_logout
+from django.core.mail import send_mail
+
+
+from .forms import AuthenticationForm, RegistrationForm
+
 media = '/home/apmishra100/ecs160/media'
 # Create your views here.
 
@@ -42,53 +46,67 @@ def prototype(request):
 
 
 def login(request):
-    c={}
-    c.update(csrf(request))
-    return render_to_response('warcraft/login.html', c)
+    if request.method == 'POST':
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            user = authenticate(userName=request.POST['userName'], password=request.POST['password'])
+            if user is not None:
+                if user.is_active:
+                    django_login(request, user)
+                    return redirect('/accounts/loggedin')
+                else:
+                    message = "You are not a verified user, please check your email."
+                    return render(request, 'warcraft/invalid_login.html', {'user_name': "",'message':message})
+            else:
+                return HttpResponseRedirect('/accounts/invalid')
+        else:
+            print form.errors
+    else:
+        form = AuthenticationForm()
+    return render_to_response('warcraft/login.html', {'form': form,}, context_instance=RequestContext(request))
 
-def auth_view(request):
+'''def auth_view(request):
     username = request.POST.get('username','')
     password = request.POST.get('password', '')
     user = auth.authenticate(username=username, password=password)
     if user is not None:
-        auth.login(request, user)
-        return HttpResponseRedirect('/accounts/loggedin')
+        if user.is_active is not False:
+            auth.login(request, user)
+            return HttpResponseRedirect('/accounts/loggedin')
+        else:
+            message="You are not a verified user, please check your email."
+            return render(request, 'warcraft/invalid_login.html', {'user_name': request.user.username,'message':message})  
     else:
-        return HttpResponseRedirect('/accounts/invalid')
+        return HttpResponseRedirect('/accounts/invalid')'''
         
 def logout(request):
-    auth.logout(request)
+    django_logout(request)
     return render_to_response('warcraft/logout.html')
 
 def loggedin(request):
-    profile = request.user.userprofile
-    picture = profile.picture
-    return render(request, 'warcraft/loggedin.html', {'full_name': request.user.username, 'avatar':picture})
+    picture = request.user.picture
+    fname = request.user.firstName
+    lname = request.user.lastName
+    return render(request, 'warcraft/loggedin.html', {'full_name': fname+" "+lname, 'avatar':picture})
 
 def invalid_login(request):
-    return render_to_response('warcraft/invalid_login.html')
+    message= "Invalid login credentials"
+    emptystring=""
+    return render(request, 'warcraft/invalid_login.html', {'user_name':emptystring, 'message':message})
     
     
 def register_user(request):
-    context = RequestContext(request)
     if request.method == 'POST':
-        user_form = UserForm(data = request.POST)
-        profile_form = UserProfileForm(request.POST, request.FILES)
-        if user_form.is_valid() and profile_form.is_valid():
-            user = user_form.save()
-            user.set_password(user.password)
-            user.save()
-            profile = profile_form.save(commit=False)
-            profile.user = user
-            profile.picture = request.FILES['picture']
-            profile.save()
-            return HttpResponseRedirect('/accounts/register_success')
-        else:
-            print user_form.errors, profile_form.errors
+        form = RegistrationForm(request.POST, request.FILES)
+        if form.is_valid():
+            user = form.save()
+            message = "Please visit http://apmishra100.koding.io/accounts/activate and use the key %s to activate your account." % user.confirmation_key
+            send_mail('Activate your account', message, None, [user.email])
+            return redirect('/accounts/register_success')
     else:
-        user_form = UserForm()
-        profile_form = UserProfileForm()
-    return render_to_response('warcraft/register.html', {'user_form': user_form, 'profile_form': profile_form}, context)
+        form = RegistrationForm()
+    return render_to_response('warcraft/register.html', {'form': form,}, context_instance=RequestContext(request))
+    
 
 def register_success (reqest):
     return render_to_response('warcraft/register_success.html')
@@ -99,8 +117,10 @@ def internalLogin (request):
         password = request.META['HTTP_PASSWORD']
         user = auth.authenticate(username=username, password=password)
         if user is not None:
-            auth.login(request, user)
-            return HttpResponseRedirect('/accounts/loggedin')
+            if user.is_active is not False:
+                auth.login(request, user)
+                return JsonResponse({'LoginStatus': 'Success'})
+            else:
+                return JsonResponse({'LoginStatus': user.confirmation_key, 'Email': user.email} )
         else:
-            return HttpResponseRedirect('/accounts/invalid')
-        return render(request, 'warcraft/internalLogin.html', {'username': dummy, 'password': passdummy})
+            return JsonResponse({'LoginStatus': 'Incorrect Credentials'})
