@@ -70,3 +70,6 @@ class User(SimpleEmailConfirmationUserMixin, AbstractBaseUser):
         
         def get_short_name(self):
             return self.userName
+            
+        def get_email(self):
+            return self.email

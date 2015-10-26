@@ -24,7 +24,6 @@ urlpatterns = [
     url(r'^/$', include('warcraft.urls', namespace="warcraft")),
     url(r'', include('warcraft.urls', namespace="warcraft")),
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^accounts/activate/$', 'warcraft.views.activate'),
     url(r'^accounts/login/$', 'warcraft.views.login'),
     url(r'^accounts/logout/$', 'warcraft.views.logout'),
     url(r'^accounts/loggedin/$', 'warcraft.views.loggedin'),
@@ -32,5 +31,6 @@ urlpatterns = [
     url(r'^accounts/register/$', 'warcraft.views.register_user'),
     url(r'^accounts/register_success/$', 'warcraft.views.register_success'),
     url(r'^accounts/internalLogin/$', 'warcraft.views.internalLogin'),
+    url(r'^accounts/activate/(?P<userName>\w{1,50})/(?P<activation_key>\w{1,50})/$', 'warcraft.views.activate'),
     
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

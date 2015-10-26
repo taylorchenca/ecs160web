@@ -9,11 +9,16 @@ import re
 from simple_email_confirmation import *
 from django.contrib.auth import login as django_login, authenticate, logout as django_logout
 from django.core.mail import send_mail
+from warcraft.models import User
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import get_template
 
 
 from .forms import AuthenticationForm, RegistrationForm
 
-media = '/home/apmishra100/ecs160/media'
+media = '/home/apmishra100/ecs160/media/'
+
+
 # Create your views here.
 
 def index(request):
@@ -43,6 +48,13 @@ def prototype(request):
                 return render(request, 'warcraft/prototype_form.html', {'error':error, 'message':message})
     else:
         return render(request, 'warcraft/prototype_form.html', {'error':error, 'message':message})
+
+def activate(request):
+    if request.method == 'POST':
+        return render(request, 'warcraft/activate.html')
+    else:
+        return render(request, 'warcraft/activate.html')
+        
 
 
 def login(request):
@@ -79,6 +91,22 @@ def login(request):
     else:
         return HttpResponseRedirect('/accounts/invalid')'''
         
+        
+def activate(request, userName, activation_key):
+    confirmed = "Your account and email have been confirmed!"
+    exception = "Sorry confirmation key does not match email on file"
+    not_found = "Sorry user name not found" 
+    ACuser = User.objects.get(userName = userName)
+    if ACuser is not None:
+        if ACuser.email  == ACuser.confirm_email(activation_key):
+            ACuser.is_active = True
+            ACuser.save()
+            return render(request, 'warcraft/activate.html', {'message': confirmed}) 
+        else:
+            return render(request, 'warcraft/activate.html', {'message': exception})
+    else:
+        return render(request, 'warcraft/activate.html', {'message': not_found})
+
 def logout(request):
     django_logout(request)
     return render_to_response('warcraft/logout.html')
@@ -100,8 +128,19 @@ def register_user(request):
         form = RegistrationForm(request.POST, request.FILES)
         if form.is_valid():
             user = form.save()
-            message = "Please visit http://apmishra100.koding.io/accounts/activate and use the key %s to activate your account." % user.confirmation_key
-            send_mail('Activate your account', message, None, [user.email])
+            link = "http://apmishra100.koding.io/accounts/activate/%s/%s/" %(user.userName, user.confirmation_key)
+            picture = user.picture
+            d = Context({'username':user.userName, 'link':link, 'avatar':picture}) 
+            message = "%s please visit http://apmishra100.koding.io/accounts/activate/%s/%s/ to activate your account." %(user.userName, user.userName, user.confirmation_key)
+            plaintext = get_template('warcraft/email.txt')
+            htmly = get_template('warcraft/email.html')
+            text_content = plaintext.render(d)
+            html_content = htmly.render(d)
+            subject = "Acivation"
+            from_email = "chriscraftecs160@gmail.com"
+            msg = EmailMultiAlternatives(subject, text_content, from_email, [user.email])
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
             return redirect('/accounts/register_success')
     else:
         form = RegistrationForm()
