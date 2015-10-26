@@ -23,3 +23,5 @@ sudo apachectl restart
 
 Visit username.koding.io and you should be able to view the website
 ---
+
+Run sudo pip install django-simple-email-confirmation to install the necessary email verification app.
