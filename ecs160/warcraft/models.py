@@ -5,7 +5,7 @@ from django.contrib.auth.models import AbstractBaseUser
 from simple_email_confirmation import SimpleEmailConfirmationUserMixin
 from django.contrib.auth.models import UserManager
 from django.contrib.auth.models import BaseUserManager
-
+from django.contrib.auth.signals import user_logged_in, user_logged_out
 
 # Create your models here.
 
@@ -71,7 +71,8 @@ class User(SimpleEmailConfirmationUserMixin, AbstractBaseUser):
         is_active = models.BooleanField(default = False)
         is_admin = models.BooleanField(default = False)
         is_online = models.BooleanField(default = False)
-        
+        login_internal = models.BooleanField(default = False)
+        login_web = models.BooleanField(default = False)
         USERNAME_FIELD = 'userName'
         REQUIRED_FIELDS = []
         

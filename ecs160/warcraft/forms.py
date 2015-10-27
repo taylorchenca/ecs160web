@@ -43,3 +43,18 @@ class AuthenticationForm(forms.Form):
 
     class Meta:
         fields = ['userName', 'password']
+
+
+class EditUserForm(forms.ModelForm):
+    email = forms.CharField(max_length=75, widget=forms.EmailInput())
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email')
+        
+class ChangePasswordForm(forms.ModelForm):
+    password = forms.CharField(required=True, widget=forms.PasswordInput())
+
+    class Meta:
+        model = User
+        fields = ('password',)
