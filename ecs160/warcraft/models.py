@@ -17,6 +17,32 @@ from django.contrib.auth.models import BaseUserManager
     def __unicode__(self):
         return self.user.usernam'''
 
+class LoggedUser(models.Model):
+    user = models.ForeignKey('User')
+    web = models.BooleanField(default=False)
+    internal = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.user.userName
+
+    def login_user(sender, request, user, **kwargs):
+        try:
+            e = LoggedUser.objects.get(user=user)
+        except LoggedUser.DoesNotExist:
+            LoggedUser(user=user, web=user.login_web, internal=user.login_internal).save()
+
+    def logout_user(sender, request, user, **kwargs):
+        try:
+            u = LoggedUser.objects.get(user=user)
+            u.delete()
+        except LoggedUser.DoesNotExist:
+            pass
+
+    user_logged_in.connect(login_user)
+    user_logged_out.connect(logout_user)
+
+
+
 class CustomUserManager(BaseUserManager):
 
     def create_user(self, userName, password=None, **extra_fields):

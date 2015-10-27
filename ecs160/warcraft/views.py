@@ -12,7 +12,7 @@ from django.core.mail import send_mail
 from warcraft.models import User
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
-
+from .models import LoggedUser
 
 from .forms import AuthenticationForm, RegistrationForm
 
@@ -64,6 +64,7 @@ def login(request):
             user = authenticate(userName=request.POST['userName'], password=request.POST['password'])
             if user is not None:
                 if user.is_active:
+                    user.login_web = True
                     django_login(request, user)
                     return redirect('/accounts/loggedin')
                 else:
@@ -157,9 +158,18 @@ def internalLogin (request):
         user = auth.authenticate(username=username, password=password)
         if user is not None:
             if user.is_active is not False:
-                auth.login(request, user)
+                user.login_internal = True
+                django_login(request, user)
                 return JsonResponse({'LoginStatus': 'Success'})
             else:
                 return JsonResponse({'LoginStatus': user.confirmation_key, 'Email': user.email} )
         else:
             return JsonResponse({'LoginStatus': 'Incorrect Credentials'})
+
+def webLoggedIn (request):
+    web_users = LoggedUser.objects.all().filter(web=True)
+    return render(request, 'warcraft/web_users.html', {'users' : web_users})
+    
+def internalLoggedIn (request):
+    internal_users = LoggedUser.objects.all().filter(internal=True)
+    return render(request, 'warcraft/internal_users.html', {'users' : internal_users})
