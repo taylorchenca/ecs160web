@@ -3,7 +3,6 @@ from django.template import RequestContext, loader, Context
 from django.shortcuts import render, render_to_response, redirect
 from django.contrib import auth
 from django.core.context_processors import csrf
-from django.contrib.auth.decorators import login_required
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import JsonResponse
 import re
@@ -15,7 +14,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
 from .models import LoggedUser
 
-from .forms import AuthenticationForm, RegistrationForm, EditUserForm, ChangePasswordForm
+from .forms import AuthenticationForm, RegistrationForm, EditProfileForm, ChangePasswordForm
 
 media = '/home/apmishra100/ecs160/media/'
 
@@ -124,71 +123,45 @@ def invalid_login(request):
     emptystring=""
     return render(request, 'warcraft/invalid_login.html', {'user_name':emptystring, 'message':message})
 
-@login_required    
-def edit_userProfile(request):
-    profile = UserProfile.objects.get(user=request.user)
+def edit_profile(request):
     if request.method == "POST":
-        edit_user_form = EditUserForm(data=request.POST, instance=request.user)
-        edit_profile_form = UserProfileForm(data=request.POST, instance=profile)
-
-        if edit_user_form.is_valid() and edit_profile_form.is_valid():
-            user = edit_user_form.save()
-            user.set_password(user.password)
-            user.save()
-            profile = edit_profile_form.save(commit=False)
-            profile.user = user
+        form = EditProfileForm(data=request.POST, instance=request.user)
+        if form.is_valid():
+            user = form.save()
             if 'picture' in request.FILES:
-              profile.picture = request.FILES['picture']
-            profile.save()
-        else:
-            print(edit_user_form.errors, edit_profile_form.errors)
-    else:
-        edit_user_form = EditUserForm(instance=request.user)
-        edit_profile_form = UserProfileForm(instance=profile)
-
-    return render(request, 'warcraft/edit_userProfile.html', {'edit_user_form': edit_user_form, 'edit_profile_form': edit_profile_form})
-
-@login_required
-def edit_success (request):
-    profile = request.user.userprofile
-    request.user.first_name = request.POST.get("first_name", "")
-    request.user.last_name = request.POST.get("last_name", "")
-    request.user.email = request.POST.get("email", "")
-    request.user.save()
-    if 'picture' in request.FILES:
-      profile.picture = request.FILES['picture']
-    profile.save()
-    
-    first_name = request.user.first_name
-    last_name = request.user.last_name
-    email = request.user.email
-    picture = profile.picture
-    return render(request, 'warcraft/edit_success.html', {'first_name': first_name, 'last_name': last_name, 'email': email, 'picture': picture})
-  
-@login_required    
-def change_password(request):
-    if request.method == "POST":
-        change_password_form = ChangePasswordForm(data=request.POST, instance=request.user)
-        
-        if change_password_form.is_valid():
-            user = change_password_form.save()
-            user.set_password(user.password)
+              user.picture = request.FILES['picture']
             user.save()
-        else:
-            print(change_password_form.errors)
+            picture = request.user.picture
+            fname = request.user.firstName
+            lname = request.user.lastName
+            email = request.user.email
+            return render(request, 'warcraft/edit_profile_success.html', {'full_name': fname+" "+lname, 'picture':picture, 'email':email})
     else:
-        change_password_form = ChangePasswordForm(instance=request.user)
+        form = EditProfileForm(instance=request.user)
+    return render(request, 'warcraft/edit_profile.html', {'form': form})
+    
+def edit_profile_success(request):
+    fname = request.user.firstName
+    lname = request.user.lastName
+    email = request.user.email
+    picture = request.user.picture
+    return render(request, 'warcraft/edit_profile_success.html', {'full_name': fname+" "+lname, 'email': email, 'picture':picture})
 
-    return render(request, 'warcraft/change_password.html', {'change_password_form': change_password_form})
+def change_password(request,):
+    if request.method == "POST":
+        form = ChangePasswordForm(data=request.POST, instance=request.user)
+        if form.is_valid():
+            user = form.save()
+            return render(request, 'warcraft/change_password_success.html')
+    else:
+        form = ChangePasswordForm(instance=request.user)
+    return render_to_response('warcraft/change_password.html', {'form': form}, context_instance=RequestContext(request))
 
-@login_required
 def change_password_success (request):
-    request.user.set_password(request.POST.get("password", ""))
-    request.user.save()
     return render(request, 'warcraft/change_password_success.html')
     
-
     
+
 def register_user(request):
     if request.method == 'POST':
         form = RegistrationForm(request.POST, request.FILES)
@@ -227,7 +200,7 @@ def internalLogin (request):
                 django_login(request, user)
                 return JsonResponse({'LoginStatus': 'Success'})
             else:
-                return JsonResponse({'LoginStatus': user.confirmation_key, 'Email': user.email} )
+                return JsonResponse({'LoginStatus': 'Unverified'} )
         else:
             return JsonResponse({'LoginStatus': 'Incorrect Credentials'})
 
@@ -238,3 +211,7 @@ def webLoggedIn (request):
 def internalLoggedIn (request):
     internal_users = LoggedUser.objects.all().filter(internal=True)
     return render(request, 'warcraft/internal_users.html', {'users' : internal_users})
+    
+def downloads(request):
+    template = loader.get_template('warcraft/downloads.html')
+    return HttpResponse(template.render())
