@@ -38,6 +38,8 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'simple_email_confirmation',
+    'django_messages',
+    'widget_tweaks',
     'warcraft',
 )
 
@@ -57,7 +59,7 @@ ROOT_URLCONF = 'ecs160.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates'), os.path.join(BASE_DIR, 'django-messages/django_messages/templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -65,6 +67,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.template.context_processors.media',
+                'django_messages.context_processors.inbox',
                 'django.contrib.messages.context_processors.messages',
             ],
         },
