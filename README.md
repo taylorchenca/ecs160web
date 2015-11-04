@@ -26,4 +26,4 @@ Visit username.koding.io and you should be able to view the website
 
 Run sudo pip install django-simple-email-confirmation to install the necessary email verification app.
 Run sudo pip install django-messages to install the messaging app. 
-Run sudo pip install pip install django-widget-tweaks to install the dependencies for the forms.
+Run sudo pip install django-widget-tweaks to install the dependencies for the forms.
